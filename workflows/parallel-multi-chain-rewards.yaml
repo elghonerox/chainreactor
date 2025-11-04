@@ -1,0 +1,80 @@
+name: parallel-multi-chain-rewards
+version: 1.0.0
+description: Triggers NFT mint, token transfer, and badge update across 3 chains when quest completed on Polygon
+
+trigger:
+  type: blockchain_event
+  chain: polygon-amoy
+  contract: "QUEST_CONTRACT_ADDRESS"  # Replace after deployment
+  event: QuestCompleted
+  abi: |
+    event QuestCompleted(address indexed player, uint256 indexed questId, uint256 timestamp)
+  params:
+    player:
+      type: address
+      indexed: true
+    questId:
+      type: uint256
+      indexed: true
+    timestamp:
+      type: uint256
+
+actions:
+  # ACTION 1: Mint Achievement NFT on Ethereum Sepolia
+  - name: mint_achievement_nft
+    type: call_contract
+    chain: ethereum-sepolia
+    contract: "ACHIEVEMENT_NFT_ADDRESS"  # Replace after deployment
+    function: mintAchievement
+    abi: |
+      function mintAchievement(address _player, uint256 _questId) external
+    params:
+      _player: ${trigger.params.player}
+      _questId: ${trigger.params.questId}
+    gas_limit: 250000
+    max_fee_per_gas: 50 gwei
+    max_priority_fee_per_gas: 2 gwei
+
+  # ACTION 2: Distribute Reward Tokens on BNB Testnet
+  - name: transfer_reward_tokens
+    type: call_contract
+    chain: bnb-testnet
+    contract: "REWARD_TOKEN_ADDRESS"  # Replace after deployment
+    function: distributeReward
+    abi: |
+      function distributeReward(address _player, uint256 _amount) external
+    params:
+      _player: ${trigger.params.player}
+      _amount: "10000000000000000000"  # 10 tokens with 18 decimals
+    gas_limit: 100000
+    max_fee_per_gas: 10 gwei
+
+  # ACTION 3: Update Player Badge on Arbitrum Sepolia
+  - name: update_player_badge
+    type: call_contract
+    chain: arbitrum-sepolia
+    contract: "BADGE_TRACKER_ADDRESS"  # Replace after deployment
+    function: incrementBadgeCount
+    abi: |
+      function incrementBadgeCount(address _player) external
+    params:
+      _player: ${trigger.params.player}
+    gas_limit: 80000
+    max_fee_per_gas: 0.1 gwei
+
+execution:
+  mode: parallel  # All 3 actions execute simultaneously
+  retry_policy:
+    max_attempts: 3
+    backoff_multiplier: 2
+    initial_delay: 5s
+  timeout: 180  # 3 minutes total
+  
+notifications:
+  on_success:
+    - type: log
+      message: "Multi-chain rewards distributed for player ${trigger.params.player} (Quest ${trigger.params.questId})"
+  on_failure:
+    - type: log
+      level: error
+      message: "Failed to distribute rewards for ${trigger.params.player}"

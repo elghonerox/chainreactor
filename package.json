@@ -1,0 +1,36 @@
+{
+  "name": "chainreactor",
+  "version": "1.0.0",
+  "description": "Multi-chain quest automation powered by Kwala",
+  "scripts": {
+    "deploy:polygon": "hardhat run scripts/deploy-polygon.js --network polygonAmoy",
+    "deploy:ethereum": "hardhat run scripts/deploy-ethereum.js --network sepolia",
+    "deploy:bnb": "hardhat run scripts/deploy-bnb.js --network bnbTestnet",
+    "deploy:arbitrum": "hardhat run scripts/deploy-arbitrum.js --network arbitrumSepolia",
+    "deploy:all": "npm run deploy:polygon && npm run deploy:ethereum && npm run deploy:bnb && npm run deploy:arbitrum",
+    "verify:polygon": "hardhat verify --network polygonAmoy",
+    "verify:ethereum": "hardhat verify --network sepolia",
+    "verify:bnb": "hardhat verify --network bnbTestnet",
+    "verify:arbitrum": "hardhat verify --network arbitrumSepolia",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "clean": "hardhat clean"
+  },
+  "keywords": [
+    "web3",
+    "blockchain",
+    "kwala",
+    "automation",
+    "multi-chain"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "hardhat": "^2.19.0",
+    "dotenv": "^16.3.1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.1"
+  }
+}

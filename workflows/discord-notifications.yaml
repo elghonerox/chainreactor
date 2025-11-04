@@ -1,0 +1,109 @@
+name: discord-reward-notifications
+version: 1.0.0
+description: Listens to reward events across all chains and sends Discord notifications
+
+trigger:
+  type: multi_chain_event_listener
+  chains:
+    - chain: polygon-amoy
+      contract: "QUEST_CONTRACT_ADDRESS"
+      event: QuestCompleted
+      abi: |
+        event QuestCompleted(address indexed player, uint256 indexed questId, uint256 timestamp)
+    
+    - chain: ethereum-sepolia
+      contract: "ACHIEVEMENT_NFT_ADDRESS"
+      event: AchievementMinted
+      abi: |
+        event AchievementMinted(address indexed player, uint256 indexed tokenId, uint256 questId, uint256 timestamp)
+    
+    - chain: bnb-testnet
+      contract: "REWARD_TOKEN_ADDRESS"
+      event: RewardClaimed
+      abi: |
+        event RewardClaimed(address indexed player, uint256 amount, uint256 timestamp)
+    
+    - chain: arbitrum-sepolia
+      contract: "BADGE_TRACKER_ADDRESS"
+      event: BadgeUpdated
+      abi: |
+        event BadgeUpdated(address indexed player, uint256 totalBadges, uint256 timestamp)
+
+actions:
+  # Transform event data into Discord embed format
+  - name: format_discord_message
+    type: javascript
+    code: |
+      const chainNames = {
+        'polygon-amoy': 'Polygon Amoy',
+        'ethereum-sepolia': 'Ethereum Sepolia',
+        'bnb-testnet': 'BNB Testnet',
+        'arbitrum-sepolia': 'Arbitrum Sepolia'
+      };
+      
+      const eventTitles = {
+        'QuestCompleted': '🎮 Quest Completed!',
+        'AchievementMinted': '🏆 Achievement NFT Minted!',
+        'RewardClaimed': '💰 Reward Tokens Claimed!',
+        'BadgeUpdated': '⚡ Badge Updated!'
+      };
+      
+      const explorerUrls = {
+        'polygon-amoy': 'https://amoy.polygonscan.com/tx/',
+        'ethereum-sepolia': 'https://sepolia.etherscan.io/tx/',
+        'bnb-testnet': 'https://testnet.bscscan.com/tx/',
+        'arbitrum-sepolia': 'https://sepolia.arbiscan.io/tx/'
+      };
+      
+      const chain = trigger.chain;
+      const eventName = trigger.event_name;
+      const player = trigger.params.player;
+      const txHash = trigger.transaction_hash;
+      const timestamp = trigger.block_timestamp;
+      
+      const shortAddress = player.slice(0, 6) + '...' + player.slice(-4);
+      const explorerLink = explorerUrls[chain] + txHash;
+      
+      return {
+        title: eventTitles[eventName] || 'Blockchain Event',
+        description: `**Player:** \`${shortAddress}\`\n**Chain:** ${chainNames[chain]}\n**Time:** <t:${timestamp}:R>`,
+        url: explorerLink,
+        color: 0x00ff88,
+        timestamp: new Date(timestamp * 1000).toISOString()
+      };
+    store_result_as: discord_embed
+
+  # Send formatted message to Discord webhook
+  - name: send_discord_webhook
+    type: http_request
+    method: POST
+    url: "${env.DISCORD_WEBHOOK_URL}"  # Set in environment variables
+    headers:
+      Content-Type: application/json
+    body:
+      username: "ChainReactor Bot"
+      avatar_url: "https://i.imgur.com/placeholder.png"
+      embeds:
+        - title: ${actions.format_discord_message.result.title}
+          description: ${actions.format_discord_message.result.description}
+          url: ${actions.format_discord_message.result.url}
+          color: ${actions.format_discord_message.result.color}
+          timestamp: ${actions.format_discord_message.result.timestamp}
+          footer:
+            text: "ChainReactor Multi-Chain Automation"
+          fields:
+            - name: "Transaction"
+              value: "[View on Explorer](${actions.format_discord_message.result.url})"
+              inline: false
+
+execution:
+  mode: sequential
+  retry_policy:
+    max_attempts: 1  # Don't retry Discord notifications
+  timeout: 30
+
+notifications:
+  on_failure:
+    - type: log
+      level: warning
+      message: "Failed to send Discord notification for ${trigger.event_name} on ${trigger.chain}"

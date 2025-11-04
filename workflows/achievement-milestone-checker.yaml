@@ -1,0 +1,129 @@
+name: achievement-milestone-checker
+version: 1.0.0
+description: Checks player quest count on Polygon, auto-mints milestone NFTs on Ethereum based on thresholds
+
+trigger:
+  type: cron
+  schedule: "0 */6 * * *"  # Every 6 hours
+  timezone: UTC
+  
+  # Alternative: Webhook trigger for manual execution
+  # type: webhook
+  # method: POST
+  # path: /trigger/milestone-check
+
+variables:
+  player_address:
+    type: address
+    description: "Player address to check (passed via workflow params)"
+    required: true
+  
+  bronze_threshold:
+    type: uint256
+    value: 3
+    description: "Quests needed for Bronze tier"
+  
+  silver_threshold:
+    type: uint256
+    value: 5
+    description: "Quests needed for Silver tier"
+  
+  gold_threshold:
+    type: uint256
+    value: 10
+    description: "Quests needed for Gold tier"
+
+actions:
+  # STEP 1: Read quest count from Polygon
+  - name: check_quest_count
+    type: read_contract
+    chain: polygon-amoy
+    contract: "QUEST_CONTRACT_ADDRESS"
+    function: getPlayerQuestCount
+    abi: |
+      function getPlayerQuestCount(address _player) external view returns (uint256)
+    params:
+      _player: ${variables.player_address}
+    store_result_as: quest_count
+
+  # STEP 2: Check if Bronze tier already claimed
+  - name: check_bronze_claimed
+    type: read_contract
+    chain: ethereum-sepolia
+    contract: "ACHIEVEMENT_NFT_ADDRESS"
+    function: hasClaimedTier
+    abi: |
+      function hasClaimedTier(address _player, uint256 _tier) external view returns (bool)
+    params:
+      _player: ${variables.player_address}
+      _tier: 1
+    store_result_as: has_bronze
+
+  # STEP 3: Check if Silver tier already claimed
+  - name: check_silver_claimed
+    type: read_contract
+    chain: ethereum-sepolia
+    contract: "ACHIEVEMENT_NFT_ADDRESS"
+    function: hasClaimedTier
+    params:
+      _player: ${variables.player_address}
+      _tier: 2
+    store_result_as: has_silver
+
+  # STEP 4: Mint Bronze NFT if eligible
+  - name: mint_bronze_tier
+    type: call_contract
+    chain: ethereum-sepolia
+    contract: "ACHIEVEMENT_NFT_ADDRESS"
+    function: mintTierNFT
+    abi: |
+      function mintTierNFT(address _player, uint256 _tier) external
+    params:
+      _player: ${variables.player_address}
+      _tier: 1
+    conditions:
+      - expression: ${actions.check_quest_count.result} >= ${variables.bronze_threshold}
+      - expression: ${actions.check_bronze_claimed.result} == false
+    gas_limit: 200000
+
+  # STEP 5: Mint Silver NFT if eligible
+  - name: mint_silver_tier
+    type: call_contract
+    chain: ethereum-sepolia
+    contract: "ACHIEVEMENT_NFT_ADDRESS"
+    function: mintTierNFT
+    params:
+      _player: ${variables.player_address}
+      _tier: 2
+    conditions:
+      - expression: ${actions.check_quest_count.result} >= ${variables.silver_threshold}
+      - expression: ${actions.check_silver_claimed.result} == false
+    gas_limit: 200000
+
+  # STEP 6: Award badge on Arbitrum if Silver achieved
+  - name: award_silver_badge
+    type: call_contract
+    chain: arbitrum-sepolia
+    contract: "BADGE_TRACKER_ADDRESS"
+    function: awardBadge
+    abi: |
+      function awardBadge(address _player, uint8 _badgeType) external
+    params:
+      _player: ${variables.player_address}
+      _badgeType: 2  # Silver badge
+    conditions:
+      - expression: ${actions.check_quest_count.result} >= ${variables.silver_threshold}
+      - expression: ${actions.check_silver_claimed.result} == false
+    gas_limit: 100000
+
+execution:
+  mode: sequential  # Run checks first, then conditional mints
+  retry_policy:
+    max_attempts: 2
+    initial_delay: 10s
+  timeout: 120
+
+notifications:
+  on_success:
+    - type: log
+      message: "Milestone check completed for ${variables.player_address}. Quest count: ${actions.check_quest_count.result}"s
