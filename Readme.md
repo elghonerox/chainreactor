@@ -291,6 +291,8 @@ npx hardhat test test/QuestContract.test.js
 
 ## 🏆 Hackathon Highlights
 
+ Why we Think our project is solid 
+ 
 ### Innovation (30%)
 - First implementation of true parallel multi-chain automation
 - Conditional cross-chain logic (read Chain A → write Chain B)
@@ -328,42 +330,6 @@ npx hardhat test test/QuestContract.test.js
 
 ---
 
-## 🌐 Block Explorer Links
-
-After deployment, contracts verified at:
-
-- **Polygon Amoy:** https://amoy.polygonscan.com/address/YOUR_ADDRESS
-- **Ethereum Sepolia:** https://sepolia.etherscan.io/address/YOUR_ADDRESS
-- **BNB Testnet:** https://testnet.bscscan.com/address/YOUR_ADDRESS
-- **Arbitrum Sepolia:** https://sepolia.arbiscan.io/address/YOUR_ADDRESS
-
----
-
-## 📹 Demo Video
-
-[Link to 3-minute demo video - TO BE RECORDED]
-
-**Script:**
-1. [0:00-0:20] Problem intro (manual multi-chain claiming)
-2. [0:20-0:45] ChainReactor solution overview
-3. [0:45-1:45] Live demo (quest → 3 chains)
-4. [1:45-2:15] Kwala YAML walkthrough
-5. [2:15-2:45] Architecture + impact
-6. [2:45-3:00] Call to action
-
----
-
-## 🤝 Contributing
-
-This project was built for Kwala Hacker House 2025. Contributions welcome!
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
-
----
 
 ## 📄 License
 
@@ -376,7 +342,8 @@ MIT License - see LICENSE file for details
 Built by ElGhonerox for Kwala Hacker House 2025
 
 **Connect:**
-- GitHub: [@yourusername](https://github.com/elghonerox)
+- GitHub: [elghonerox]
+- (https://github.com/elghonerox)
 
 ---
 
@@ -395,7 +362,3 @@ Built by ElGhonerox for Kwala Hacker House 2025
 - [Hardhat Docs](https://hardhat.org/docs)
 - [Wagmi Documentation](https://wagmi.sh)
 - [RainbowKit Documentation](https://www.rainbowkit.com)
-
----
-
-**Built with ❤️ using Kwala's serverless Web3 automation**
