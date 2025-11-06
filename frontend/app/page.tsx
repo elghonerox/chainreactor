@@ -15,37 +15,37 @@ export default function Home() {
   // Read quest data
   const { data: quest1 } = useReadContract({
     ...contracts.polygonAmoy.questContract,
+    chainId: 80002,
     functionName: 'quests',
     args: [1n],
-    chainId: 80002,
   });
 
   const { data: questCount } = useReadContract({
     ...contracts.polygonAmoy.questContract,
+    chainId: 80002,
     functionName: 'getPlayerQuestCount',
     args: address ? [address] : undefined,
-    chainId: 80002,
   });
 
   const { data: nftBalance } = useReadContract({
     ...contracts.sepolia.achievementNFT,
+    chainId: 11155111,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
-    chainId: 11155111,
   });
 
   const { data: tokenBalance } = useReadContract({
     ...contracts.bscTestnet.rewardToken,
+    chainId: 97,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
-    chainId: 97,
   });
 
   const { data: badges } = useReadContract({
     ...contracts.arbitrumSepolia.badgeTracker,
+    chainId: 421614,
     functionName: 'getPlayerBadges',
     args: address ? [address] : undefined,
-    chainId: 421614,
   });
 
   // Write contract
@@ -318,7 +318,7 @@ export default function Home() {
                       animate={{ opacity: 1 }}
                       className="mt-4 text-center"
                     >
-                      
+                      <a
                         href={`${chainExplorers[80002]}/tx/${hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
