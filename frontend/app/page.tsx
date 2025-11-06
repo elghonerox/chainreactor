@@ -5,18 +5,18 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { contracts, chainExplorers } from '@/lib/contracts';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Trophy, Coins, Award, ExternalLink, CheckCircle, Loader2, Sparkles } from 'lucide-react';
+import { Zap, Trophy, Coins, Award, ExternalLink, CheckCircle, Loader2, Sparkles, ArrowRight } from 'lucide-react';
 
 export default function Home() {
   const { address, chain } = useAccount();
   const [selectedQuest, setSelectedQuest] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Read quest data from Polygon Amoy
+  // Read quest data
   const { data: quest1 } = useReadContract({
     ...contracts.polygonAmoy.questContract,
     functionName: 'quests',
-    args: [BigInt(1)],
+    args: [1n],
     chainId: 80002,
   });
 
@@ -27,7 +27,6 @@ export default function Home() {
     chainId: 80002,
   });
 
-  // Read NFT balance from Ethereum Sepolia
   const { data: nftBalance } = useReadContract({
     ...contracts.sepolia.achievementNFT,
     functionName: 'balanceOf',
@@ -35,7 +34,6 @@ export default function Home() {
     chainId: 11155111,
   });
 
-  // Read token balance from BSC Testnet
   const { data: tokenBalance } = useReadContract({
     ...contracts.bscTestnet.rewardToken,
     functionName: 'balanceOf',
@@ -43,7 +41,6 @@ export default function Home() {
     chainId: 97,
   });
 
-  // Read badges from Arbitrum Sepolia
   const { data: badges } = useReadContract({
     ...contracts.arbitrumSepolia.badgeTracker,
     functionName: 'getPlayerBadges',
@@ -51,21 +48,12 @@ export default function Home() {
     chainId: 421614,
   });
 
-  // Write contract operations
+  // Write contract
   const { data: hash, writeContract, isPending } = useWriteContract();
 
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
-
-  // Handle success notification
-  useEffect(() => {
-    if (isSuccess && !showSuccess) {
-      setShowSuccess(true);
-      const timer = setTimeout(() => setShowSuccess(false), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [isSuccess, showSuccess]);
 
   const handleCompleteQuest = async (questId: number) => {
     if (chain?.id !== 80002) {
@@ -81,257 +69,338 @@ export default function Home() {
     });
   };
 
-  const formatTokenBalance = (balance: bigint | undefined): string => {
-    if (!balance) return '0';
-    return (Number(balance) / 1e18).toFixed(0);
-  };
-
-  const isQuestButtonDisabled = isPending || isConfirming || chain?.id !== 80002;
-
-  const getButtonText = () => {
-    if (isPending) return 'Confirming...';
-    if (isConfirming) return 'Processing...';
-    if (chain?.id !== 80002) return 'Switch to Polygon Amoy';
-    return 'Complete Quest & Trigger Rewards';
-  };
+  useEffect(() => {
+    if (isSuccess && !showSuccess) {
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 5000);
+    }
+  }, [isSuccess, showSuccess]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
+      {/* Animated background effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-purple-500/10 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-pink-500/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
+      </div>
+
       {/* Header */}
-      <nav className="border-b border-purple-500/20 backdrop-blur-sm sticky top-0 z-40 bg-slate-900/50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Zap className="w-8 h-8 text-purple-400" />
-            <h1 className="text-2xl font-bold text-white">ChainReactor</h1>
+      <nav className="relative border-b border-purple-500/20 backdrop-blur-xl bg-slate-900/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-3"
+            >
+              <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-2 rounded-xl">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  ChainReactor
+                </h1>
+                <p className="text-xs text-purple-300">Multi-Chain Automation</p>
+              </div>
+            </motion.div>
+            <ConnectButton />
           </div>
-          <ConnectButton />
         </div>
       </nav>
 
-      {/* Success Notification */}
+      {/* Success Toast */}
       <AnimatePresence>
         {showSuccess && (
           <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
+            initial={{ opacity: 0, y: -50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -50, scale: 0.95 }}
             className="fixed top-24 left-1/2 -translate-x-1/2 z-50"
           >
-            <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              <span className="font-semibold">Multi-chain rewards triggered! Check your wallet.</span>
+            <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border border-green-400/50">
+              <CheckCircle className="w-6 h-6" />
+              <div>
+                <p className="font-bold">Quest Completed! 🎉</p>
+                <p className="text-sm text-green-100">Multi-chain rewards triggered</p>
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-12">
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {!address ? (
-          <motion.div
+          <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-20"
           >
-            <Sparkles className="w-20 h-20 text-purple-400 mx-auto mb-6" />
-            <h2 className="text-4xl font-bold text-white mb-4">
-              Multi-Chain Quest Automation
+            <motion.div
+              animate={{ 
+                rotate: [0, 5, -5, 0],
+                scale: [1, 1.05, 1]
+              }}
+              transition={{ 
+                duration: 3,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+              className="inline-block mb-8"
+            >
+              <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-8 rounded-3xl shadow-2xl">
+                <Zap className="w-24 h-24 text-white" />
+              </div>
+            </motion.div>
+            
+            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
+              Multi-Chain Quest
+              <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                Automation
+              </span>
             </h2>
-            <p className="text-xl text-purple-200 mb-8 max-w-2xl mx-auto">
-              Complete quests on one chain. Earn rewards across 4 chains automatically. 
-              Powered by Kwala's serverless automation.
+            
+            <p className="text-xl text-purple-200 mb-4 max-w-2xl mx-auto">
+              Complete quests. Earn rewards across <span className="font-bold text-purple-300">4 chains</span>.
             </p>
-            <div className="flex justify-center">
+            <p className="text-lg text-purple-300/80 mb-12 max-w-xl mx-auto">
+              Powered by Kwala serverless workflows
+            </p>
+            
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <ConnectButton />
+            </motion.div>
+
+            {/* Feature Cards */}
+            <div className="grid md:grid-cols-3 gap-6 mt-20 max-w-4xl mx-auto">
+              {[
+                { icon: Sparkles, title: "One Click", desc: "Complete quest once" },
+                { icon: Zap, title: "Auto Trigger", desc: "Kwala handles the rest" },
+                { icon: Trophy, title: "Multi-Chain", desc: "Rewards on 4 chains" }
+              ].map((feature, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all"
+                >
+                  <feature.icon className="w-10 h-10 text-purple-400 mx-auto mb-4" />
+                  <h3 className="text-white font-bold mb-2">{feature.title}</h3>
+                  <p className="text-purple-300 text-sm">{feature.desc}</p>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Stats Dashboard */}
-            <div className="lg:col-span-1 space-y-4">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-purple-500/20"
-              >
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-purple-400" />
-                  Your Stats
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-purple-300">Quests Completed</span>
-                    <span className="text-2xl font-bold text-white">
-                      {questCount?.toString() || '0'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-purple-300">NFTs Earned</span>
-                    <span className="text-2xl font-bold text-white">
-                      {nftBalance?.toString() || '0'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-purple-300">CRRT Tokens</span>
-                    <span className="text-2xl font-bold text-white">
-                      {formatTokenBalance(tokenBalance)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-purple-300">Total Badges</span>
-                    <span className="text-2xl font-bold text-white">
-                      {badges?.[0]?.toString() || '0'}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Chain Status */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-purple-500/20"
-              >
-                <h3 className="text-lg font-semibold text-white mb-4">Chain Status</h3>
-                <div className="space-y-3">
-                  {[
-                    { name: 'Polygon Amoy', icon: '🟣', status: 'Active', color: 'text-green-400' },
-                    { name: 'Ethereum Sepolia', icon: '🔷', status: 'Listening', color: 'text-blue-400' },
-                    { name: 'BNB Testnet', icon: '🟡', status: 'Listening', color: 'text-yellow-400' },
-                    { name: 'Arbitrum Sepolia', icon: '🔵', status: 'Listening', color: 'text-cyan-400' },
-                  ].map((chainItem) => (
-                    <div key={chainItem.name} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{chainItem.icon}</span>
-                        <span className="text-sm text-purple-300">{chainItem.name}</span>
-                      </div>
-                      <span className={`text-xs font-medium ${chainItem.color}`}>
-                        {chainItem.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Quest Cards */}
-            <div className="lg:col-span-2 space-y-6">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <h2 className="text-3xl font-bold text-white mb-2">Available Quests</h2>
-                <p className="text-purple-300">
-                  Complete a quest → Trigger rewards on 3 chains simultaneously
-                </p>
-              </motion.div>
-
-              {/* Quest Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                whileHover={{ scale: 1.02 }}
-                className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 backdrop-blur-sm rounded-xl p-8 border border-purple-500/30 shadow-xl"
-              >
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h3 className="text-2xl font-bold text-white mb-2">
-                      {quest1?.[0] || 'Collect 5 Items'}
-                    </h3>
-                    <p className="text-purple-300">Complete basic collection challenge</p>
-                  </div>
-                  <div className="bg-purple-500/20 px-4 py-2 rounded-lg border border-purple-500/30">
-                    <span className="text-purple-300 text-sm font-semibold">Quest #1</span>
-                  </div>
-                </div>
-
-                {/* Rewards Preview */}
-                <div className="grid grid-cols-3 gap-4 mb-6">
-                  <div className="bg-white/5 rounded-lg p-4 text-center border border-yellow-500/20 hover:border-yellow-500/40 transition-colors">
-                    <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-                    <div className="text-xs text-purple-300 mb-1">Ethereum</div>
-                    <div className="text-sm font-semibold text-white">Achievement NFT</div>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-4 text-center border border-green-500/20 hover:border-green-500/40 transition-colors">
-                    <Coins className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                    <div className="text-xs text-purple-300 mb-1">BNB Chain</div>
-                    <div className="text-sm font-semibold text-white">10 CRRT Tokens</div>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-4 text-center border border-blue-500/20 hover:border-blue-500/40 transition-colors">
-                    <Award className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-                    <div className="text-xs text-purple-300 mb-1">Arbitrum</div>
-                    <div className="text-sm font-semibold text-white">+1 Badge</div>
-                  </div>
-                </div>
-
-                {/* Action Button */}
-                <button
-                  onClick={() => handleCompleteQuest(1)}
-                  disabled={isQuestButtonDisabled}
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-4 px-6 rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-                >
-                  {isPending || isConfirming ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      {getButtonText()}
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-5 h-5" />
-                      {getButtonText()}
-                    </>
-                  )}
-                </button>
-
-                {/* Transaction Link */}
-                {hash && (
+          <div className="space-y-8">
+            {/* Stats Dashboard - Centered */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-4xl mx-auto"
+            >
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { label: "Quests", value: questCount?.toString() || '0', icon: Sparkles, color: "from-purple-500 to-pink-500" },
+                  { label: "NFTs", value: nftBalance?.toString() || '0', icon: Trophy, color: "from-yellow-500 to-orange-500" },
+                  { label: "Tokens", value: tokenBalance ? (Number(tokenBalance) / 1e18).toFixed(0) : '0', icon: Coins, color: "from-green-500 to-emerald-500" },
+                  { label: "Badges", value: badges?.[0]?.toString() || '0', icon: Award, color: "from-blue-500 to-cyan-500" },
+                ].map((stat, i) => (
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="mt-4 text-center"
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.1 }}
+                    whileHover={{ scale: 1.05 }}
+                    className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-purple-500/50 transition-all"
                   >
-                    <a
-                      href={`${chainExplorers[80002]}/tx/${hash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-purple-400 hover:text-purple-300 text-sm flex items-center justify-center gap-1 transition-colors"
-                    >
-                      View transaction <ExternalLink className="w-4 h-4" />
-                    </a>
+                    <div className={`bg-gradient-to-br ${stat.color} w-12 h-12 rounded-xl flex items-center justify-center mb-3`}>
+                      <stat.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <p className="text-purple-300 text-sm mb-1">{stat.label}</p>
+                    <p className="text-3xl font-bold text-white">{stat.value}</p>
                   </motion.div>
-                )}
-              </motion.div>
+                ))}
+              </div>
+            </motion.div>
 
-              {/* Info Box */}
+            {/* Quest Card - Centered & Larger */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="max-w-3xl mx-auto"
+            >
+              <div className="text-center mb-6">
+                <h2 className="text-4xl font-bold text-white mb-3">Available Quest</h2>
+                <p className="text-purple-300">
+                  Complete once → Trigger rewards on 3 chains simultaneously
+                </p>
+              </div>
+
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4"
+                whileHover={{ scale: 1.02 }}
+                className="bg-gradient-to-br from-purple-900/50 via-pink-900/30 to-purple-900/50 backdrop-blur-xl rounded-3xl p-8 border border-purple-500/30 shadow-2xl relative overflow-hidden"
               >
-                <div className="flex gap-3">
-                  <Zap className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                {/* Animated glow */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-purple-500/10 animate-pulse-slow" />
+                
+                <div className="relative">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <div className="inline-block bg-purple-500/20 px-4 py-1 rounded-full mb-3">
+                        <span className="text-purple-300 text-sm font-semibold">Quest #1</span>
+                      </div>
+                      <h3 className="text-3xl font-bold text-white mb-2">
+                        {quest1?.[0] || 'Collect 5 Items'}
+                      </h3>
+                      <p className="text-purple-300">Complete basic collection challenge</p>
+                    </div>
+                  </div>
+
+                  {/* Rewards Preview - Better Layout */}
+                  <div className="grid grid-cols-3 gap-4 mb-8">
+                    {[
+                      { icon: Trophy, chain: "Ethereum", reward: "Achievement NFT", color: "from-blue-500 to-purple-500" },
+                      { icon: Coins, chain: "BNB Chain", reward: "10 CRRT Tokens", color: "from-yellow-500 to-green-500" },
+                      { icon: Award, chain: "Arbitrum", reward: "+1 Badge", color: "from-cyan-500 to-blue-500" },
+                    ].map((reward, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 + i * 0.1 }}
+                        className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 text-center"
+                      >
+                        <div className={`bg-gradient-to-br ${reward.color} w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3`}>
+                          <reward.icon className="w-6 h-6 text-white" />
+                        </div>
+                        <p className="text-xs text-purple-300 mb-1">{reward.chain}</p>
+                        <p className="text-sm font-semibold text-white">{reward.reward}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Action Button - Centered & Larger */}
+                  <motion.button
+                    onClick={() => handleCompleteQuest(1)}
+                    disabled={isPending || isConfirming || chain?.id !== 80002}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 text-white font-bold py-5 px-8 rounded-2xl hover:from-purple-600 hover:via-pink-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-purple-500/50 flex items-center justify-center gap-3 text-lg"
+                  >
+                    {isPending || isConfirming ? (
+                      <>
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        {isPending ? 'Confirming Transaction...' : 'Processing Rewards...'}
+                      </>
+                    ) : chain?.id !== 80002 ? (
+                      <>
+                        Switch to Polygon Amoy
+                        <ArrowRight className="w-5 h-5" />
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-6 h-6" />
+                        Complete Quest & Trigger Rewards
+                        <ArrowRight className="w-5 h-5" />
+                      </>
+                    )}
+                  </motion.button>
+
+                  {hash && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="mt-4 text-center"
+                    >
+                      
+                        href={`${chainExplorers[80002]}/tx/${hash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
+                      >
+                        View transaction on PolygonScan
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* Info Box - Centered */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="max-w-3xl mx-auto"
+            >
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-6 backdrop-blur-sm">
+                <div className="flex gap-4">
+                  <div className="bg-blue-500/20 p-3 rounded-xl h-fit">
+                    <Zap className="w-6 h-6 text-blue-400" />
+                  </div>
                   <div>
-                    <h4 className="font-semibold text-white mb-1">Powered by Kwala Automation</h4>
-                    <p className="text-sm text-blue-300">
+                    <h4 className="font-bold text-white mb-2 text-lg">Powered by Kwala Automation</h4>
+                    <p className="text-blue-200 leading-relaxed">
                       When you complete a quest, Kwala's serverless workflows automatically trigger
                       NFT minting on Ethereum, token distribution on BNB, and badge updates on Arbitrum
                       — all in parallel, no manual claiming needed.
                     </p>
                   </div>
                 </div>
-              </motion.div>
-            </div>
+              </div>
+            </motion.div>
+
+            {/* Chain Status - Centered */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="max-w-2xl mx-auto"
+            >
+              <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                <h3 className="text-lg font-semibold text-white mb-4 text-center">Chain Status</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { name: 'Polygon', icon: '🟣', status: 'Active' },
+                    { name: 'Ethereum', icon: '🔷', status: 'Listening' },
+                    { name: 'BNB', icon: '🟡', status: 'Listening' },
+                    { name: 'Arbitrum', icon: '🔵', status: 'Listening' },
+                  ].map((chain, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.6 + i * 0.05 }}
+                      className="text-center"
+                    >
+                      <div className="text-3xl mb-2">{chain.icon}</div>
+                      <p className="text-white text-sm font-medium">{chain.name}</p>
+                      <p className="text-green-400 text-xs mt-1">● {chain.status}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
           </div>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-purple-500/20 mt-20">
-        <div className="max-w-7xl mx-auto px-4 py-8 text-center text-purple-300">
-          <p className="text-sm">Built for Kwala Hacker House 2025 • Multi-Chain Automation Demo</p>
+      <footer className="relative border-t border-purple-500/20 mt-20 backdrop-blur-xl bg-slate-900/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
+          <p className="text-purple-300">
+            Built for <span className="font-semibold text-purple-400">Kwala Hacker House 2025</span> • Multi-Chain Automation Demo
+          </p>
+          <p className="text-purple-400/60 text-sm mt-2">
+            Deployed on Polygon Amoy • Powered by Kwala Workflows
+          </p>
         </div>
       </footer>
     </div>
