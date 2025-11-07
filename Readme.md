@@ -137,7 +137,18 @@ With testnet funding: **60-90 minutes**
 - End-to-end test: 30 min
 
 ---
----
+## 🔗 Kwala Configuration
+
+**Kwala Workspace**: https://kwala.network/workspace/[YOUR_WORKSPACE_ID]
+**Kwala Execution Wallet**: `0x6eb6ee4044d2fac6b56c100942d4e5254112dfb5`
+
+### Contract Ownership Status:
+- ✅ Polygon QuestContract → Owned by Kwala
+- 🟡 Ethereum AchievementNFT → Pending deployment
+- 🟡 BNB RewardToken → Pending deployment
+- 🟡 Arbitrum BadgeTracker → Pending deployment
+
+Ownership transfer scripts ready in `/scripts` directory.
 
 ## 🚀 Quick Start
 
