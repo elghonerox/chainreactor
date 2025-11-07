@@ -1,0 +1,23 @@
+const hre = require("hardhat");
+
+async function main() {
+  const KWALA_WALLET = "0x6eb6ee4044d2fac6b56c100942d4e5254112dfb5";
+  
+  console.log("\n🔄 Transferring BadgeTracker ownership to Kwala...");
+  
+  const badgeTracker = await hre.ethers.getContractAt(
+    "BadgeTracker",
+    process.env.ARBITRUM_BADGE_TRACKER
+  );
+  
+  const tx = await badgeTracker.transferOwnership(KWALA_WALLET);
+  await tx.wait();
+  
+  console.log("✅ Arbitrum ownership transferred");
+  process.exit(0);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
