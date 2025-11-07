@@ -114,6 +114,29 @@ the configuration:
 The YAML files in `/workflows` directory contain the complete, 
 production-ready workflow definitions that can be deployed via 
 Kwala CLI or API when testnets are funded.
+
+## Kwala Integration Progress
+
+### ✅ Completed:
+- Kwala workflow created: `parallel-multi-chain-rewards`
+- Kwala wallet identified: `0x6eb6ee4044d2fac6b56c100942d4e5254112dfb5`
+- Ownership transfer script tested on Polygon Amoy
+- QuestContract ownership transferred to Kwala ✅
+
+### 🟡 Pending (Blocked by Testnet Constraints):
+- Deploy contracts to Ethereum Sepolia (need Sepolia ETH)
+- Deploy contracts to BNB Testnet (need BNB testnet tokens)
+- Deploy contracts to Arbitrum Sepolia (need Arbitrum testnet ETH)
+- Transfer ownership of remaining 3 contracts to Kwala
+
+### Timeline to Full Deployment:
+With testnet funding: **60-90 minutes**
+- Deploy 3 remaining contracts: 20 min
+- Transfer ownership: 15 min
+- Update Kwala workflow addresses: 10 min
+- End-to-end test: 30 min
+
+---
 ---
 
 ## 🚀 Quick Start
