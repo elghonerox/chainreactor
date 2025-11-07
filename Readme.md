@@ -109,7 +109,7 @@ Due to time constraints, workflow was configured in Kwala's
 web editor but may require final validation. Screenshots show 
 the configuration:
 
-![Kwala Editor](screenshots/kwala-editor.png)
+![Kwala Editor](chainreactor/screenshots)
 
 The YAML files in `/workflows` directory contain the complete, 
 production-ready workflow definitions that can be deployed via 
@@ -139,7 +139,7 @@ With testnet funding: **60-90 minutes**
 ---
 ## 🔗 Kwala Configuration
 
-**Kwala Workspace**: https://kwala.network/workspace/[YOUR_WORKSPACE_ID]
+**Kwala Workspace**: https://kwala.network/workspace/
 **Kwala Execution Wallet**: `0x6eb6ee4044d2fac6b56c100942d4e5254112dfb5`
 
 ### Contract Ownership Status:
