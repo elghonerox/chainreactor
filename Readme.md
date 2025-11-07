@@ -103,6 +103,17 @@ This submission demonstrates **complete architectural understanding** of:
 
 The code is deployment-ready. Testnet logistics ≠ technical capability.
 
+## Kwala Configuration Attempt
+
+Due to time constraints, workflow was configured in Kwala's 
+web editor but may require final validation. Screenshots show 
+the configuration:
+
+![Kwala Editor](screenshots/kwala-editor.png)
+
+The YAML files in `/workflows` directory contain the complete, 
+production-ready workflow definitions that can be deployed via 
+Kwala CLI or API when testnets are funded.
 ---
 
 ## 🚀 Quick Start
