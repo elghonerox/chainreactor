@@ -70,6 +70,7 @@ Web3 gaming UX is broken:
 - Wagmi v2 for contract interactions
 - Real-time stats dashboard
 
+  Demo video link: https://www.youtube.com/watch?v=xFgBEZbMiWw
 ---
 
 ## 🚀 Quick Start
