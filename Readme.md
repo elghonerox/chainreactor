@@ -71,6 +71,12 @@ Web3 gaming UX is broken:
 - Real-time stats dashboard
 
   Demo video link: https://www.youtube.com/watch?v=xFgBEZbMiWw
+
+  ## Live Demo
+You can access the deployed version of the project here:
+
+👉 https://chainreactor1.vercel.app/
+
 ---
 
 ## 🚀 Quick Start
